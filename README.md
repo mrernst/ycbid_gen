@@ -3,9 +3,9 @@
 #### Prerequisites
 To use this piece of software you need to have the following companion programmes installed
 
-* gazebo simulator
-* icub model world
-* yarp
+* gazebo simulator [http://gazebosim.org](http://gazebosim.org)
+* icub model world [icub gazebo worlds](https://github.com/robotology/icub-gazebo)
+* yarp [http://www.yarp.it](http://www.yarp.it)
 * numpy
 * pandas
 * PIL
