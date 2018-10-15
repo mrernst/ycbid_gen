@@ -176,28 +176,6 @@ def pixeltoangle(pixel_offset):
     return pixel_offset * 90 / 320
 
 
-
-# def get_target_pixels(universe, robot, screen):
-#     # before = get_image_before(robot)
-#     # screen.set_positions(1,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
-#     # wait_until_view_changed(universe, robot, before)
-#
-#     justtarget_left = np.copy(robot.cam_left.get_image())
-#     justtarget_right = np.copy(robot.cam_right.get_image())
-#
-#     target_indices_left = np.where(np.sum(justtarget_left, axis=2) > 0.)
-#     target_indices_right = np.where(np.sum(justtarget_right, axis=2) > 0.)
-#
-#     n_target_pixels_left = len(target_indices_left[0])
-#     n_target_pixels_right = len(target_indices_right[0])
-#
-#     # before = get_image_before(robot)
-#     # screen.set_positions(-3,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
-#     # wait_until_view_changed(universe, robot, before)
-#
-#     return n_target_pixels_left, n_target_pixels_right
-
-
 def get_init_pose(x_dist, rand=False):
     x_pos = x_dist
     y_pos = 0
@@ -220,26 +198,16 @@ def convolve(arr1, arr2):
     for i in range(220, 420):
         subarr1 = arr1[:,-i-1:] if i < arrlen else arr1[:,:rlen-i+1]
         subarr2 = arr2[:,i-arrlen:] if i > arrlen else arr2[:,:i+1]
-        # print(i, subarr1.shape, subarr2.shape)
-        # result[i] = np.sum(subarr1 * subarr2) / np.prod(subarr1.shape)
         result[i] = np.sqrt(np.mean((subarr1 - subarr2)**2))
     return result
 
 def perform_vergence(universe, robot, screen):
-    #before = get_image_before(robot)
-    #screen.set_positions(1,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
-    #wait_until_view_changed(universe, robot, before)
-
     left_picture = np.copy(robot.cam_left.get_image())
     right_picture = np.copy(robot.cam_right.get_image())
     # sum over the channels
     convolved_array = convolve(left_picture, right_picture)
     vdiff = np.argmin(convolved_array) - 320 # > should be at 320
     robot.vergence.set_relative_positions([pixeltoangle(vdiff)])
-
-    #before = get_image_before(robot)
-    #screen.set_positions(-3,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
-    #wait_until_view_changed(universe, robot, before)
     pass
 
 def initialize_target(universe, robot, screen, gzobjects, target):
@@ -268,14 +236,9 @@ def tidy_up(universe, robot, screen, gzobjects, target, occ):
     for o in occ:
         gzobjects[o].set_positions(-2., 0., 0., 0., 0., 0.)
     gzobjects[target].set_positions(-2., 0., 0., 0., 0., 0.)
-    #wait_until_view_changed(universe, robot, before)
-    #screen.set_positions(-3,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
     universe.time.step_simulation(N_SIMULATION_STEPS)
 
 def measure_occlusion(universe, robot, screen, target_object, target_pose, n_target_pixels_left, n_target_pixels_right):
-    #before = get_image_before(robot)
-    #screen.set_positions(1,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
-
     target_object.set_positions(x=-3, y=target_pose[1],
                             z=target_pose[2], roll=target_pose[3], pitch=target_pose[4], yaw=target_pose[5])
     universe.time.step_simulation(N_SIMULATION_STEPS)
@@ -306,10 +269,6 @@ def measure_occlusion(universe, robot, screen, target_object, target_pose, n_tar
     occlusion_percentage_right = (n_target_pixels_right - len(occluded_target_indices_right[0]))/n_target_pixels_right
     occlusion_percentage_avg = (occlusion_percentage_left + occlusion_percentage_right) / 2.
 
-    #before = get_image_before(robot)
-    #screen.set_positions(-3,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
-    #print('occlusion left: {:.3f}\t occlusion right: {:.3f}\t occlusion avg: {:.3f}'.format(occlusion_percentage_left, occlusion_percentage_right, occlusion_percentage_avg))
-    #print(" " * 80 + "\r" + "occ. left: {:.3f}\tocc. right: {:.3f} \tocc. avg: {:.3f}".format(occlusion_percentage_left, occlusion_percentage_right, occlusion_percentage_avg), end="\r")
     print(" " * 80 + "\r" + "occ. avg: {:.3f}".format(occlusion_percentage_avg), end="\r")
     universe.time.step_simulation(N_SIMULATION_STEPS)
 
@@ -371,8 +330,6 @@ def manage_output(universe, robot, screen, dataframe, gzobjects, target, target_
 
     # get semantic_sementation_array before screen is moved and plot it
     seg_left, seg_right = get_semantic_segmentation_array(universe, robot, screen, gzobjects, target, target_pose, occluder_set, occluder_pose_dict)
-    #plt.imshow(seg_left[:,:,0] + seg_left[:,:,1]*2 + seg_left[:,:,2]*3)
-    #plt.show()
 
     screen.set_positions(-3,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
     universe.time.step_simulation(N_SIMULATION_STEPS)
@@ -470,10 +427,6 @@ def setup_universe(viewerclient=True):
 
 
 def get_object_pixels(universe, robot, screen):
-    #before = get_image_before(robot)
-    #screen.set_positions(1,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
-    #wait_until_view_changed(universe, robot, before)
-
     # take pictures left right
     picture_left = np.copy(robot.cam_left.get_image())
     picture_right = np.copy(robot.cam_right.get_image())
@@ -484,11 +437,7 @@ def get_object_pixels(universe, robot, screen):
 
     semantic_pixels_right = np.sum(picture_right, axis=2)
     semantic_pixels_right[semantic_pixels_right > 0.] = 1.
-
-    #before = get_image_before(robot)
-    #screen.set_positions(-3,0,RESSOURCES.Z_DEFAULT_SCREEN_POS,0,0.5*np.pi,np.pi)
-    #wait_until_view_changed(universe, robot, before)
-
+    
     # hand back arrays 2x [240,320]
     return semantic_pixels_left, semantic_pixels_right
 
